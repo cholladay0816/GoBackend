@@ -51,6 +51,40 @@ func FindUser(id string) *User {
 	return nil
 }
 
+// AllUsers fetched and returned
+func AllUsers() []*User {
+	db, dberr := sql.Open("mysql", "root:@tcp(127.0.0.1:3306)/creator_core")
+	if dberr != nil {
+		log.Fatal(dberr)
+	}
+	defer db.Close()
+	stmt, err := db.Prepare("select `id`, `name`, `email`, `password` from `users` where 1")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmt.Close()
+	rows, err := stmt.Query()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var users []*User
+
+	for rows.Next() {
+		u := new(User)
+
+		if err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.password); err != nil {
+			log.Fatal(err)
+		}
+		users = append(users, u)
+	}
+	if err = rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return users
+}
+
 // Constructor for a new User
 func newUser(n string, e string, p string) *User {
 	u := new(User)
